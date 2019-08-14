@@ -1,0 +1,160 @@
+/* to display all schemas*/
+Select * from INFORMATION_SCHEMA.tables;
+/*to dispaly all indexes*/
+select * from pg_indexes;
+/**/
+Select * from information_schema.columns;
+/*list all only the column names and data type for the table roster.*/
+Select column_name, data_type from information_schema.columns where table_name='roster';
+
+SELECT SESSION_USER, CURRENT_USER;
+
+
+
+
+
+
+
+
+
+
+/*List all the tables in the public schema of the database.*/
+Select table_name from information_schema.tables where table_schema='public';
+
+/*List all the indexes in the person table. (use Postgres catalog)*/
+select * from pg_indexes where tablename='person';
+
+/*list all only the column names for the table roster.*/
+Select column_name from information_schema.columns where table_name='roster';
+
+/*Return all the sequence names in TechCertificate.*/
+Select sequence_name from information_schema.sequences;
+
+/*Return all the referential constraints in TechCertificate.*/
+select column_name, data_type, constraint_name, constraint_type
+from information_schema.columns join information_schema.table_constraints
+on information_schema.columns.table_name=information_schema.table_constraints.table_name
+where information_schema.columns.table_name='certificate' Order by column_name;
+
+/*Show all the enabled roles?*/
+select * from pg_catalog.pg_tablespace;
+
+/*Come up with 4 other system queries.*/
+select * from pg_catalog.pg_extension;
+ /*Display users that are connected*/
+SELECT * FROM  current_user;
+ /*  display the currentschema*/
+select * from current_schema;
+ /*display the address of the local connection*/
+select * from inet_server_addr();
+ /*display the currently executing query*/
+select * from current_query();
+
+
+select lastname, firstname, email,sectionkey from person join student using (personkey)
+join roster using (studentkey) where sectionkey=1
+union
+select lastname, firstname, email,  sectionkey from person join student using (personkey)
+join roster using (studentkey) where sectionkey=2;
+
+/* 1.SELECT the last name, first name, and email for each student in section 1.
+Add the literal string “Section 1” to identify them, then use UNION to combine 
+them with all the students in section 2. */
+select lastname, firstname, email from person join student using (personkey)
+join roster using (studentkey) where sectionkey=1
+union
+select lastname, firstname, email from person join student using (personkey)
+join roster using (studentkey) where sectionkey=2;
+
+/* 2.Return the last name, first name and email for every student in section year 2017
+who is also in section year 2018 */
+SELECT personkey, lastname, firstname, email
+FROM person
+join student using (personkey)
+join roster using (studentkey)
+join coursesection using (sectionkey)
+where sectionyear =2017
+Intersect 
+SELECT personkey, lastname, firstname, email
+FROM person
+join student using (personkey)
+join roster using (studentkey)
+join coursesection using (sectionkey)
+where sectionyear =2018;
+
+/* 3. Use the same queries as in exercise 2, but return the names of the students 
+who were in section year 2017 but not in section year 2018.*/
+SELECT personkey, lastname, firstname, email
+FROM person
+join student using (personkey)
+join roster using (studentkey)
+join coursesection using (sectionkey)
+where sectionyear =2017
+except 
+SELECT personkey, lastname, firstname, email
+FROM person
+join student using (personkey)
+join roster using (studentkey)
+join coursesection using (sectionkey)
+where sectionyear =2018;
+/* 4.Show the Section year, quarter key, student key and the final grade for each student
+along with average final grade partitioned by section year and sorted by quarter*/
+select sectionyear, quarterkey, studentkey, finalgrade,
+DENSE_RANK()over
+(partition by sectionyear 
+order by finalgrade)
+from coursesection 
+join quarter using (quarterkey)
+join roster using (sectionkey);
+
+/* 5.Use the ROW_NUMBER function to return the row numbers for section year, section key, student key 
+and final grade for section 29 ordered by final grade.*/
+select sectionyear, sectionkey, studentkey,
+ROW_NUMBER()over (order by finalgrade)
+from coursesection
+join roster using (sectionkey);
+
+/* 6. Use a ROW_NUMBER and a sub query to return rows 7, 8 and 9 from the query used in exercise 5.*/
+select * from ( select sectionyear, sectionkey, studentkey,
+ROW_NUMBER()over (order by finalgrade) 
+as ROW_NUMBER
+from coursesection
+join roster using (sectionkey))x
+where ROW_NUMBER Between 7 and 9; 
+
+/* 7. Return section year, section key, student key, final grade and rank for sections between 
+29 and 35,partitioned by section key and ordered by the final grade descending.*/
+select sectionyear, sectionkey, studentkey, finalgrade,
+RANK() over (partition by sectionkey order by finalgrade desc)
+from coursesection
+join roster using (sectionkey);
+
+/* 8.Run the same query as in exercise 7 but use DENSE_RANK(). */
+select sectionyear, sectionkey, studentkey, finalgrade,
+DENSE_RANK() over (partition by sectionkey order by finalgrade desc)
+from coursesection
+join roster using (sectionkey);
+/* 9.Use the same query as in exercise 7 but order by final grade without DESC and return 
+the FIRST _VALUE instead of RANK.*/
+select sectionyear, sectionkey, studentkey, finalgrade,
+FIRST_VALUE(finalgrade) 
+over (partition by sectionkey order by finalgrade desc)
+from coursesection
+join roster using (sectionkey);
+
+/* 10.Create a temporary table with this structure:bhb */
+CREATE TEMP TABLE quarterCOUNT
+(
+      "Year" integer,
+      quarter integer,
+      st_count Integer
+);
+
+                Populate it with this query:
+
+INSERT INTO quartercount
+SELECT sectionyear, quarterkey, COUNT(StudentKey)
+FROM coursesection
+JOIN roster USING (sectionkey)
+GROUP BY sectionyear, quarterkey;
+

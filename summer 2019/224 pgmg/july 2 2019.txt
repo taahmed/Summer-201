@@ -1,0 +1,31 @@
+CREATE TABLE log
+(
+      logkey SERIAL PRIMARY KEY,
+      logtimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      loginkey INTEGER
+);
+select * from log
+
+
+
+select grantapplicationdate,
+granttypename,
+grantapplicationamount
+from grantapplication
+join granttype 
+using (granttypekey); 
+
+/*mgt*/
+Create table meeting
+(
+	Meetingkey Serial primary key,
+	personkey int references person(personkey),
+);
+
+/* The same with the above example
+Create table meeting
+(
+	Meetingkey Serial primary key,
+	constraint fk_person foreign key (personkey) references person personkey
+)
+*/

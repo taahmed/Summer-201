@@ -1,0 +1,10 @@
+granttypename,granttypeonetimemax,granttypelifetimemax
+Food,200,600
+Rent,800,1600
+School,600,2400
+Dental,200,600
+Medical,700,3000
+Travel,600,2800
+Childcare,300,5000
+Funerary,900,900
+Misc,200,800
